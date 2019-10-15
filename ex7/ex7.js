@@ -28,23 +28,34 @@ function getFile(file) {
   });
 }
 
-function* run() {
+function* Gen() {
   var p1 = getFile("file1");
   var p2 = getFile("file2");
   var p3 = getFile("file3");
 
-  var text1 = yield p1;
-  output(text1);
-  var text2 = yield p2;
-  output(text2);
-  var text3 = yield p3;
-  output(text3);
+  output(yield p1);
+  output(yield p2);
+  output(yield p3);
 
   output("Complete!");
 }
 
-var it = run();
-var item1 = it.next();
+function runner(genFn) {
+  const itr = genFn();
+
+  function run(arg) {
+    const result = itr.next(arg);
+    if (result.done) {
+      return result.value;
+    } else {
+      return Promise.resolve(result.value).then(run);
+    }
+  }
+
+  run();
+}
+
+runner(Gen);
 
 /* ASQ().runner(function*() {
   var p1 = getFile("file1");
